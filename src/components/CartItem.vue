@@ -9,7 +9,7 @@
       <div class="row align-items-center">
         <div class="col-12 col-md-2 text-center mb-3 mb-md-0">
           <img 
-            :src="item.productId?.image || 'https://placehold.jp/24/0d6efd/ffffff/100x80.png?text=Laptop'" 
+            :src="item.productId?.image || 'https://placehold.jp/24/2563EB/ffffff/100x80.png?text=Laptop'" 
             class="img-fluid rounded" 
             alt="Laptop"
           >
@@ -52,7 +52,7 @@
       <button type="button" class="btn-close" @click="showDetails = false"></button>
     </div>
     <div class="offcanvas-body">
-       <span class="h4 fw-bold text-primary">₱ {{ (item.productId?.price || 0).toLocaleString() }}</span>
+       <span class="h4 fw-bold text-price">₱ {{ (item.productId?.price || 0).toLocaleString() }}</span>
        <button @click="showDetails = false" class="btn btn-primary w-100 py-2">Back to Cart</button>
     </div>
   </div>

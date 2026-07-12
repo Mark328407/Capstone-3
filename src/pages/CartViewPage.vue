@@ -36,7 +36,7 @@
             
             <div class="d-flex justify-content-between mb-4">
               <span class="h5">Total Price:</span>
-              <span class="h5 text-primary">
+              <span class="h5 text-price">
                 {{ totalPrice ? totalPrice.toLocaleString() : '0' }}
               </span>
             </div>

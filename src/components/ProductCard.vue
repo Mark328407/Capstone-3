@@ -29,7 +29,7 @@
       </div>
       
       <div class="mt-auto">
-        <h5 class="text-primary fw-bold mb-0">₱ {{ product.price.toLocaleString() }}</h5>
+        <h5 class="text-price fw-bold mb-0">₱ {{ product.price.toLocaleString() }}</h5>
       </div>
     </div>
   </div>
@@ -73,7 +73,7 @@
             <div class="mt-auto p-4 bg-light rounded-4">
               <div class="d-flex justify-content-between align-items-center mb-3">
                 <div>
-                  <span class="display-6 fw-bold text-primary">₱ {{ product.price.toLocaleString() }}</span>
+                  <span class="display-6 fw-bold text-price">₱ {{ product.price.toLocaleString() }}</span>
                   <div class="text-warning mt-1 small">
                     <i class="bi bi-star-fill me-1"></i>{{ product.rating || 0 }} Rating
                   </div>

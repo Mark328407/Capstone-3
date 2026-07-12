@@ -154,7 +154,7 @@ const fetchLaptops = async () => {
       // If image is missing or uses the broken placeholder, replace it
       image: product.image && !product.image.includes('placeholder.com') 
              ? product.image 
-             : `https://placehold.jp/24/0d6efd/ffffff/300x200.png?text=${encodeURIComponent(product.name)}`
+             : `https://placehold.jp/24/2563EB/ffffff/300x200.png?text=${encodeURIComponent(product.name)}`
     }));
   } catch (error) {
     console.error("Error loading products:", error);

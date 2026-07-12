@@ -1,74 +1,61 @@
 <template>
   <div class="container my-5">
-    <div class="row justify-content-center">
-      <div class="col-12 col-lg-10">
-        <h2 class="mb-4 text-center">Checkout</h2>
+    <h2 class="mb-4"><i class="bi bi-cart3"></i> Your Shopping Cart</h2>
+
+    <div v-if="cartItems.length > 0" class="row">
+      <div class="col-lg-8">
+        <CartItem 
+          v-for="item in cartItems" 
+          :key="item.productId._id || item.productId" 
+          :item="item" 
+          @update-qty="handleUpdateQuantity"
+          @remove="handleRemoveItem"
+        />
         
-        <div class="row g-4">
-          <div class="col-md-7">
-            <div class="card shadow-sm border-0 mb-4">
-              <div class="card-header bg-dark text-white">
-                <h5 class="mb-0">Shipping Information</h5>
-              </div>
-              <div class="card-body">
-                <form id="checkoutForm" @submit.prevent="handlePlaceOrder">
-                  <div class="mb-3">
-                    <label class="form-label">Full Name</label>
-                    <input type="text" class="form-control" placeholder="Juan Dela Cruz" required>
-                  </div>
-                  <div class="mb-3">
-                    <label class="form-label">Shipping Address</label>
-                    <textarea class="form-control" rows="2" placeholder="123 Street, Taguig City, Philippines" required></textarea>
-                  </div>
-                  <div class="mb-3">
-                    <label class="form-label">Payment Method</label>
-                    <select class="form-select">
-                      <option value="cod">Cash on Delivery (COD)</option>
-                      <option value="card" disabled>Credit/Debit Card (Coming Soon)</option>
-                    </select>
-                  </div>
-                </form>
-              </div>
+        <div class="d-flex justify-content-between mt-3">
+          <router-link to="/" class="btn btn-outline-dark">
+            <i class="bi bi-arrow-left"></i> Continue Shopping
+          </router-link>
+          <button @click="handleClearCart" class="btn btn-outline-danger btn-sm">
+            Clear Cart
+          </button>
+        </div>
+      </div>
+
+      <div class="col-lg-4 mt-4 mt-lg-0">
+        <div class="card shadow-sm border-0 bg-light">
+          <div class="card-body">
+            <h4 class="card-title mb-4">Order Summary</h4>
+            
+            <div class="d-flex justify-content-between mb-2">
+              <span>Items Count:</span>
+              <span>{{ totalItems }}</span>
             </div>
-          </div>
-
-          <div class="col-md-5">
-            <div class="card shadow-sm border-0">
-              <div class="card-header bg-primary text-white">
-                <h5 class="mb-0">Order Summary</h5>
-              </div>
-              <div class="card-body">
-                <div v-for="item in cartItems" :key="item.productId._id" class="mb-3 border-bottom pb-2">
-                  <div class="d-flex justify-content-between">
-                    <span class="fw-bold">{{ item.productId?.name || 'Loading Laptop...' }}</span>
-                    <span>₱ {{ ((item.productId?.price || 0) * item.quantity).toLocaleString() }}</span>
-                  </div>
-                  <div class="small text-muted">x{{ item.quantity }}</div>
-                </div>
-
-                <div class="d-flex justify-content-between align-items-center mt-4">
-                  <span class="h5">Total to Pay:</span>
-                  <span class="h5 text-primary fw-bold">₱ {{ totalPrice.toLocaleString() }}</span>
-                </div>
-
-                <button 
-                  type="submit" 
-                  form="checkoutForm" 
-                  class="btn btn-success w-100 btn-lg" 
-                  :disabled="isProcessing || cartItems.length === 0"
-                >
-                  <span v-if="isProcessing" class="spinner-border spinner-border-sm me-2"></span>
-                  {{ isProcessing ? 'Processing...' : 'Place Order' }}
-                </button>
-                
-                <router-link to="/cart" class="btn btn-link w-100 mt-2 text-decoration-none text-muted">
-                  Back to Cart
-                </router-link>
-              </div>
+            
+            <hr>
+            
+            <div class="d-flex justify-content-between mb-4">
+              <span class="h5">Total Price:</span>
+              <span class="h5 text-price">
+                {{ totalPrice ? totalPrice.toLocaleString() : '0' }}
+              </span>
             </div>
+
+            <button @click="proceedToCheckout" class="btn btn-success w-100 btn-lg shadow-sm">
+              Proceed to Checkout
+            </button>
           </div>
         </div>
       </div>
+    </div>
+
+    <div v-else class="text-center py-5">
+      <div class="mb-4">
+        <i class="bi bi-cart-x text-muted" style="font-size: 4rem;"></i>
+      </div>
+      <h3>Your cart is empty</h3>
+      <p class="text-muted">Looks like you haven't added any laptops to your cart yet.</p>
+      <router-link to="/" class="btn btn-primary mt-3">Browse Laptops</router-link>
     </div>
   </div>
 </template>
@@ -77,86 +64,121 @@
 import { ref, computed, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import api from '../services/api';
-import { useUserStore } from '../stores/global'; 
+import CartItem from '../components/CartItem.vue';
+import { useUserStore } from '../stores/global';
+import { Notyf } from 'notyf';
+import 'notyf/notyf.min.css';
+
+const notyf = new Notyf({ duration: 3000, position: { x: 'right', y: 'top' } });
 
 const router = useRouter();
+const cartItems = ref([]);
 const userStore = useUserStore();
-const cartItems = ref([]); 
-const isProcessing = ref(false);
-
-const totalPrice = computed(() => {
-
-  if (!cartItems.value || cartItems.value.length === 0) return 0;
-  
-  return cartItems.value.reduce((acc, item) => {
-   
-    const price = item.productId?.price || 0;
-    return acc + (price * item.quantity);
-  }, 0);
-});
+const isLoading = ref(true);
 
 const fetchCart = async () => {
   try {
+    isLoading.value = true;
     const res = await api.get('/cart/get-cart', {
       headers: {
-        
         Authorization: `Bearer ${localStorage.getItem('token')}`
       }
     });
-    
- 
+
+    // Check if res.data.cart exists before accessing cartItems
     if (res.data && res.data.cart) {
       cartItems.value = res.data.cart.cartItems || [];
     } else {
       cartItems.value = [];
     }
-    
-    if (cartItems.value.length === 0) {
-      router.push('/cart');
-    }
-  } catch (err) {
-    console.error("Error loading checkout", err);
-    cartItems.value = []; 
-  }
-};
-
-const handlePlaceOrder = async () => {
-  if (cartItems.value.length === 0) {
-    alert("Your cart is empty!");
-    return;
-  }
-
-  isProcessing.value = true;
-  try {
-   
-    const token = localStorage.getItem('token'); 
-
-  const res = await api.post('/orders/checkout', {}, {
-    headers: { Authorization: `Bearer ${token}` }
-  });
-
-    if (res.status === 201 || res.status === 200) {
-      alert("Order Placed Successfully!");
-      await userStore.updateCartCount(); 
-      router.push('/my-orders'); 
-    }
-  } catch (err) {
-    console.error("Checkout Error:", err);
-    alert("Place order failed. Please check your connection.");
+  } catch (error) {
+    console.error("Error fetching cart:", error);
+    cartItems.value = []; // Reset on error to prevent NaN loops
   } finally {
-    isProcessing.value = false;
+    isLoading.value = false;
+  }
+}
+
+const totalPrice = computed(() => {
+  return cartItems.value.reduce((acc, item) => {
+    // Check if productId is populated with the laptop details
+    const price = item.productId?.price || item.price || 0;
+    return acc + (price * item.quantity);
+  }, 0);
+});
+
+const totalItems = computed(() => {
+  return cartItems.value.reduce((acc, item) => acc + item.quantity, 0);
+});
+
+// Inside src/pages/CartViewPage.vue script
+const handleUpdateQuantity = async ({ productId, quantity }) => {
+  try {
+    await api.patch('/cart/update-cart-quantity', 
+      { productId, quantity }, 
+      {
+        headers: {
+          // FIX: Include authorization so the backend allows the update
+          Authorization: `Bearer ${localStorage.getItem('token')}`
+        }
+      }
+    );
+    
+    // Refresh the data so the new subtotal shows up
+    await fetchCart(); 
+    await userStore.updateCartCount(); 
+  } catch (err) {
+    console.error("Update failed:", err);
+    notyf.error("Failed to update quantity. Please try again.");
   }
 };
 
-onMounted(fetchCart);
+// src/pages/CartViewPage.vue
+
+const handleRemoveItem = async (productId) => {
+  try {
+    // FIX: Include headers so the backend knows WHO is removing the item
+    await api.patch(`/cart/${productId}/remove-from-cart`, {}, {
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem('token')}`
+      }
+    });
+    await fetchCart(); 
+    await userStore.updateCartCount();
+    notyf.success("Item removed from cart.");
+  } catch (err) {
+    console.error("Remove failed:", err);
+    notyf.error("Could not remove item.");
+  }
+};
+
+const handleClearCart = async () => {
+  if (!confirm("Are you sure you want to empty your cart?")) return;
+  try {
+    await api.put('/cart/clear-cart', {}, {
+      headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+    });
+    cartItems.value = [];
+    await userStore.updateCartCount();
+    notyf.success("Cart cleared successfully.");
+  } catch (err) {
+    console.error("Clear failed:", err);
+    notyf.error("Error clearing cart.");
+  }
+};
+
+const proceedToCheckout = () => {
+  router.push('/checkout');
+};
+
+
+onMounted(() => {
+  fetchCart();
+});
 </script>
 
 <style scoped>
-.card {
-  border-radius: 10px;
-}
-.form-control:focus {
-  border-color: #2563EB;
-  box-shadow: none;
+.container {
+  min-height: 70vh;
 }
 </style>
