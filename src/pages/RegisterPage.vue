@@ -1,184 +1,167 @@
 <template>
   <div class="container my-5">
-    <h2 class="mb-4"><i class="bi bi-cart3"></i> Your Shopping Cart</h2>
+    <div class="row justify-content-center">
+      <div class="col-md-7 col-lg-6">
+        <div class="card shadow-sm border-0">
+          <div class="card-body p-4 p-md-5">
+            <h2 class="mb-4 text-center">
+              <i class="bi bi-person-plus me-2"></i>Register
+            </h2>
 
-    <div v-if="cartItems.length > 0" class="row">
-      <div class="col-lg-8">
-        <CartItem 
-          v-for="item in cartItems" 
-          :key="item.productId._id || item.productId" 
-          :item="item" 
-          @update-qty="handleUpdateQuantity"
-          @remove="handleRemoveItem"
-        />
-        
-        <div class="d-flex justify-content-between mt-3">
-          <router-link to="/" class="btn btn-outline-dark">
-            <i class="bi bi-arrow-left"></i> Continue Shopping
-          </router-link>
-          <button @click="handleClearCart" class="btn btn-outline-danger btn-sm">
-            Clear Cart
-          </button>
-        </div>
-      </div>
+            <form @submit.prevent="handleRegister">
+              <div class="row">
+                <div class="col-md-6 mb-3">
+                  <label class="form-label">First Name</label>
+                  <input
+                    v-model="firstName"
+                    type="text"
+                    class="form-control"
+                    placeholder="Juan"
+                    required
+                  >
+                </div>
+                <div class="col-md-6 mb-3">
+                  <label class="form-label">Last Name</label>
+                  <input
+                    v-model="lastName"
+                    type="text"
+                    class="form-control"
+                    placeholder="Dela Cruz"
+                    required
+                  >
+                </div>
+              </div>
 
-      <div class="col-lg-4 mt-4 mt-lg-0">
-        <div class="card shadow-sm border-0 bg-light">
-          <div class="card-body">
-            <h4 class="card-title mb-4">Order Summary</h4>
-            
-            <div class="d-flex justify-content-between mb-2">
-              <span>Items Count:</span>
-              <span>{{ totalItems }}</span>
-            </div>
-            
-            <hr>
-            
-            <div class="d-flex justify-content-between mb-4">
-              <span class="h5">Total Price:</span>
-              <span class="h5 text-primary">
-                {{ totalPrice ? totalPrice.toLocaleString() : '0' }}
-              </span>
-            </div>
+              <div class="mb-3">
+                <label class="form-label">Email</label>
+                <input
+                  v-model="email"
+                  type="email"
+                  class="form-control"
+                  placeholder="you@example.com"
+                  required
+                >
+              </div>
 
-            <button @click="proceedToCheckout" class="btn btn-success w-100 btn-lg shadow-sm">
-              Proceed to Checkout
-            </button>
+              <div class="mb-3">
+                <label class="form-label">Mobile Number</label>
+                <input
+                  v-model="mobileNo"
+                  type="tel"
+                  class="form-control"
+                  placeholder="09171234567"
+                  maxlength="11"
+                  required
+                >
+                <small class="text-muted">Must be exactly 11 digits.</small>
+              </div>
+
+              <div class="mb-3">
+                <label class="form-label">Password</label>
+                <input
+                  v-model="password"
+                  type="password"
+                  class="form-control"
+                  placeholder="At least 8 characters"
+                  required
+                >
+              </div>
+
+              <div class="mb-4">
+                <label class="form-label">Confirm Password</label>
+                <input
+                  v-model="confirmPassword"
+                  type="password"
+                  class="form-control"
+                  placeholder="Re-enter your password"
+                  required
+                >
+              </div>
+
+              <button
+                type="submit"
+                class="btn btn-primary w-100"
+                :disabled="isLoading"
+              >
+                <span v-if="isLoading" class="spinner-border spinner-border-sm me-2"></span>
+                {{ isLoading ? 'Creating account...' : 'Register' }}
+              </button>
+            </form>
+
+            <p class="text-center mt-4 mb-0">
+              Already have an account?
+              <router-link to="/login">Login here</router-link>
+            </p>
           </div>
         </div>
       </div>
-    </div>
-
-    <div v-else class="text-center py-5">
-      <div class="mb-4">
-        <i class="bi bi-cart-x text-muted" style="font-size: 4rem;"></i>
-      </div>
-      <h3>Your cart is empty</h3>
-      <p class="text-muted">Looks like you haven't added any laptops to your cart yet.</p>
-      <router-link to="/" class="btn btn-primary mt-3">Browse Laptops</router-link>
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue';
+import { ref } from 'vue';
 import { useRouter } from 'vue-router';
-import api from '../services/api';
-import CartItem from '../components/CartItem.vue';
-import { useUserStore } from '../stores/global';
+import { registerUser } from '../services/api';
 import { Notyf } from 'notyf';
 import 'notyf/notyf.min.css';
 
 const notyf = new Notyf({ duration: 3000, position: { x: 'right', y: 'top' } });
 
 const router = useRouter();
-const cartItems = ref([]);
-const userStore = useUserStore();
-const isLoading = ref(true);
 
-const fetchCart = async () => {
+const firstName = ref('');
+const lastName = ref('');
+const email = ref('');
+const mobileNo = ref('');
+const password = ref('');
+const confirmPassword = ref('');
+const isLoading = ref(false);
+
+const handleRegister = async () => {
+  // Client-side checks that mirror the backend's validation
+  // so users get instant feedback instead of a round-trip error.
+  if (!email.value.includes('@')) {
+    notyf.error('Please enter a valid email address.');
+    return;
+  }
+  if (mobileNo.value.length !== 11) {
+    notyf.error('Mobile number must be exactly 11 digits.');
+    return;
+  }
+  if (password.value.length < 8) {
+    notyf.error('Password must be at least 8 characters.');
+    return;
+  }
+  if (password.value !== confirmPassword.value) {
+    notyf.error('Passwords do not match.');
+    return;
+  }
+
+  isLoading.value = true;
   try {
-    isLoading.value = true;
-    const res = await api.get('/cart/get-cart', {
-      headers: {
-        Authorization: `Bearer ${localStorage.getItem('token')}`
-      }
+    await registerUser({
+      firstName: firstName.value,
+      lastName: lastName.value,
+      email: email.value,
+      mobileNo: mobileNo.value,
+      password: password.value
     });
 
-    // Check if res.data.cart exists before accessing cartItems
-    if (res.data && res.data.cart) {
-      cartItems.value = res.data.cart.cartItems || [];
-    } else {
-      cartItems.value = [];
-    }
+    notyf.success('Registered successfully! Please log in.');
+    router.push('/login');
   } catch (error) {
-    console.error("Error fetching cart:", error);
-    cartItems.value = []; // Reset on error to prevent NaN loops
+    console.error('Registration error:', error);
+    const message = error.response?.data?.error || 'Registration failed. Please try again.';
+    notyf.error(message);
   } finally {
     isLoading.value = false;
   }
-}
-
-const totalPrice = computed(() => {
-  return cartItems.value.reduce((acc, item) => {
-    // Check if productId is populated with the laptop details
-    const price = item.productId?.price || item.price || 0;
-    return acc + (price * item.quantity);
-  }, 0);
-});
-
-const totalItems = computed(() => {
-  return cartItems.value.reduce((acc, item) => acc + item.quantity, 0);
-});
-
-// Inside src/pages/CartViewPage.vue script
-const handleUpdateQuantity = async ({ productId, quantity }) => {
-  try {
-    await api.patch('/cart/update-cart-quantity', 
-      { productId, quantity }, 
-      {
-        headers: {
-          // FIX: Include authorization so the backend allows the update
-          Authorization: `Bearer ${localStorage.getItem('token')}`
-        }
-      }
-    );
-    
-    // Refresh the data so the new subtotal shows up
-    await fetchCart(); 
-    await userStore.updateCartCount(); 
-  } catch (err) {
-    console.error("Update failed:", err);
-    notyf.error("Failed to update quantity. Please try again.");
-  }
 };
-
-// src/pages/CartViewPage.vue
-
-const handleRemoveItem = async (productId) => {
-  try {
-    // FIX: Include headers so the backend knows WHO is removing the item
-    await api.patch(`/cart/${productId}/remove-from-cart`, {}, {
-      headers: {
-        Authorization: `Bearer ${localStorage.getItem('token')}`
-      }
-    });
-    await fetchCart(); 
-    await userStore.updateCartCount();
-    notyf.success("Item removed from cart.");
-  } catch (err) {
-    console.error("Remove failed:", err);
-    notyf.error("Could not remove item.");
-  }
-};
-
-const handleClearCart = async () => {
-  if (!confirm("Are you sure you want to empty your cart?")) return;
-  try {
-    await api.put('/cart/clear-cart', {}, {
-      headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
-    });
-    cartItems.value = [];
-    await userStore.updateCartCount();
-    notyf.success("Cart cleared successfully.");
-  } catch (err) {
-    console.error("Clear failed:", err);
-    notyf.error("Error clearing cart.");
-  }
-};
-
-const proceedToCheckout = () => {
-  router.push('/checkout');
-};
-
-
-onMounted(() => {
-  fetchCart();
-});
 </script>
 
 <style scoped>
-.container {
-  min-height: 70vh;
+.card {
+  border-radius: 12px;
 }
 </style>
