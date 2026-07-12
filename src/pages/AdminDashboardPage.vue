@@ -101,6 +101,37 @@
                 <label class="form-label fw-bold">Description</label>
                 <textarea v-model="editForm.description" class="form-control" rows="4" required></textarea>
               </div>
+              <div class="mb-3">
+                <label class="form-label fw-bold">Image URL</label>
+                <div class="input-group">
+                  <span class="input-group-text"><i class="bi bi-image"></i></span>
+                  <input
+                    v-model="editForm.image"
+                    type="url"
+                    class="form-control"
+                    placeholder="https://example.com/laptop-photo.jpg"
+                  >
+                </div>
+                <div class="form-text">
+                  Paste a direct link to an image. Leave blank to use a placeholder.
+                </div>
+              </div>
+              <div v-if="editForm.image" class="mb-2">
+                <label class="form-label fw-bold small text-muted text-uppercase">Preview</label>
+                <div class="border rounded p-2 bg-light" style="max-width: 220px;">
+                  <img
+                    :src="editForm.image"
+                    class="img-fluid rounded"
+                    alt="Preview"
+                    @error="editImagePreviewFailed = true"
+                    @load="editImagePreviewFailed = false"
+                    style="max-height: 150px; object-fit: contain; width: 100%;"
+                  >
+                  <p v-if="editImagePreviewFailed" class="text-danger small mb-0 mt-1">
+                    <i class="bi bi-exclamation-triangle me-1"></i>Couldn't load this image — check the URL.
+                  </p>
+                </div>
+              </div>
             </div>
             <div class="modal-footer bg-light">
               <button type="button" class="btn btn-outline-secondary" @click="editModal.show = false">Cancel</button>
@@ -129,7 +160,8 @@ const alert = reactive({ message: '', type: 'success' });
 
 
 const editModal = reactive({ show: false, isSubmitting: false });
-const editForm = reactive({ id: '', name: '', description: '', price: 0, stock: 0 });
+const editForm = reactive({ id: '', name: '', description: '', price: 0, stock: 0, image: '' });
+const editImagePreviewFailed = ref(false);
 
 const filteredProducts = computed(() => {
   if (!searchQuery.value) return products.value;
@@ -175,6 +207,8 @@ const handleEditClick = (product) => {
   editForm.description = product.description;
   editForm.price = product.price;
   editForm.stock = product.stock ?? 0;
+  editForm.image = product.image ?? '';
+  editImagePreviewFailed.value = false;
   editModal.show = true;
 };
 
@@ -185,7 +219,8 @@ const handleEditSubmit = async () => {
     await api.patch(`/products/${editForm.id}/update`, {
       name: editForm.name,
       description: editForm.description,
-      price: editForm.price
+      price: editForm.price,
+      image: editForm.image
     });
     editModal.show = false;
     showAlert("Product updated successfully!", "success");
