@@ -36,22 +36,36 @@
               <textarea v-model="formData.description" class="form-control" rows="4" placeholder="Detailed specs: CPU, RAM, SSD, Display..." required></textarea>
             </div>
 
-            <div class="row g-3">
-              <div class="col-md-6">
-                <label class="form-label fw-bold">Product Images (Max 30)</label>
-                <div class="input-group">
-                  <span class="input-group-text"><i class="bi bi-images"></i></span>
-                  <input type="file" @change="handleImageUpload" class="form-control" accept="image/*" multiple required>
-                </div>
-                <div class="form-text mt-1 text-primary">Selected: {{ imageFiles.length }} images</div>
+            <div class="mb-3">
+              <label class="form-label fw-bold">Image URL</label>
+              <div class="input-group">
+                <span class="input-group-text"><i class="bi bi-image"></i></span>
+                <input
+                  v-model="formData.image"
+                  type="url"
+                  class="form-control"
+                  placeholder="https://example.com/laptop-photo.jpg"
+                >
               </div>
+              <div class="form-text">
+                Paste a direct link to an image (e.g. from an image hosting site). Leave blank to use a placeholder.
+              </div>
+            </div>
 
-              <div class="col-md-6">
-                <label class="form-label fw-bold">Product Video (Optional)</label>
-                <div class="input-group">
-                  <span class="input-group-text"><i class="bi bi-play-video"></i></span>
-                  <input type="file" @change="handleVideoUpload" class="form-control" accept="video/*">
-                </div>
+            <div v-if="formData.image" class="mb-2">
+              <label class="form-label fw-bold small text-muted text-uppercase">Preview</label>
+              <div class="border rounded p-2 bg-light" style="max-width: 220px;">
+                <img
+                  :src="formData.image"
+                  class="img-fluid rounded"
+                  alt="Preview"
+                  @error="imagePreviewFailed = true"
+                  @load="imagePreviewFailed = false"
+                  style="max-height: 150px; object-fit: contain; width: 100%;"
+                >
+                <p v-if="imagePreviewFailed" class="text-danger small mb-0 mt-1">
+                  <i class="bi bi-exclamation-triangle me-1"></i>Couldn't load this image — check the URL.
+                </p>
               </div>
             </div>
           </div>
@@ -60,7 +74,7 @@
             <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal" id="closeModalBtn">Cancel</button>
             <button type="submit" class="btn btn-primary px-4" :disabled="isSubmitting">
               <span v-if="isSubmitting" class="spinner-border spinner-border-sm me-2"></span>
-              {{ isSubmitting ? 'Uploading...' : 'Save Laptop Product' }}
+              {{ isSubmitting ? 'Saving...' : 'Save Laptop Product' }}
             </button>
           </div>
         </form>
@@ -75,62 +89,33 @@ import api from '../services/api';
 
 const emit = defineEmits(['productAdded']);
 const isSubmitting = ref(false);
-const imageFiles = ref([]);
-const videoFile = ref(null);
+const imagePreviewFailed = ref(false);
 
 const formData = reactive({
   name: '',
   description: '',
   price: null,
-  stocks: 0
+  stocks: 0,
+  image: ''
 });
-
-const handleImageUpload = (event) => {
-  const files = Array.from(event.target.files);
-  if (files.length > 30) {
-    alert("You can only upload a maximum of 30 images.");
-    event.target.value = ""; 
-    imageFiles.value = [];
-    return;
-  }
-  imageFiles.value = files;
-};
-
-const handleVideoUpload = (event) => {
-  videoFile.value = event.target.files[0];
-};
 
 const handleSubmit = async () => {
   isSubmitting.value = true;
-  
-  const data = new FormData();
-  data.append('name', formData.name);
-  data.append('description', formData.description);
-  data.append('price', formData.price);
-  data.append('stock', formData.stocks); // Matches typical backend schema 'stock'
-
-  // CRITICAL: Ensure 'productImages' matches your backend Multer setup
-  imageFiles.value.forEach((file) => {
-    data.append('productImages', file); 
-  });
-
-  if (videoFile.value) {
-    data.append('productVideo', videoFile.value);
-  }
 
   try {
-    // Note: The /products/ endpoint should handle both data and files
-    await api.post('/products/', data, {
-      headers: { 'Content-Type': 'multipart/form-data' }
+    await api.post('/products/', {
+      name: formData.name,
+      description: formData.description,
+      price: formData.price,
+      stock: formData.stocks,
+      image: formData.image
     });
-    
+
     // Success - Reset form
-    Object.assign(formData, { name: '', description: '', price: null, stocks: 0 });
-    imageFiles.value = [];
-    videoFile.value = null;
-    
-    emit('productAdded'); // Refresh the list in the parent component
-    
+    Object.assign(formData, { name: '', description: '', price: null, stocks: 0, image: '' });
+
+    emit('productAdded'); 
+
     document.getElementById('closeModalBtn').click();
     alert('Laptop added successfully to the collection!');
   } catch (error) {
