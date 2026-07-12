@@ -1,6 +1,5 @@
 <template>
   <AppNavbar />
-
   <main class="py-4">
     <router-view v-slot="{ Component }">
       <transition name="fade" mode="out-in">
@@ -8,25 +7,21 @@
       </transition>
     </router-view>
   </main>
-
   <footer class="py-4 bg-white border-top mt-auto">
     <div class="container text-center text-muted">
       <small>&copy; 2026 LaptopStore | Zuitt Coding Bootcamp Capstone</small>
     </div>
   </footer>
 </template>
-
 <script setup>
 import AppNavbar from './components/AppNavbar.vue';
 </script>
-
 <style>
 /* Global Styles - Modern Tech Color Palette */
 :root {
   --primary-color: #2563EB;
   --secondary-color: #1F2937;
   --accent-color: #10B981;
-
   /* Bootstrap variable overrides (repaints utility classes: bg-primary, text-primary, border-primary, bg-dark, bg-success, etc.) */
   --bs-primary: #2563EB;
   --bs-primary-rgb: 37, 99, 235;
@@ -35,7 +30,6 @@ import AppNavbar from './components/AppNavbar.vue';
   --bs-success: #10B981;
   --bs-success-rgb: 16, 185, 129;
 }
-
 body {
   background-color: #F8FAFC;
   font-family: 'Inter', 'Segoe UI', Roboto, sans-serif;
@@ -43,7 +37,6 @@ body {
   display: flex;
   flex-direction: column;
 }
-
 /* Buttons: Bootstrap bakes btn-primary/btn-success colors as fixed hex per-component,
    so they need explicit overrides (utility classes like bg-primary/text-primary
    already pick up the --bs-primary var above automatically) */
@@ -58,7 +51,6 @@ body {
   --bs-btn-disabled-border-color: #2563EB;
   --bs-btn-focus-shadow-rgb: 37, 99, 235;
 }
-
 .btn-outline-primary {
   --bs-btn-color: #2563EB;
   --bs-btn-border-color: #2563EB;
@@ -68,7 +60,6 @@ body {
   --bs-btn-active-border-color: #2563EB;
   --bs-btn-focus-shadow-rgb: 37, 99, 235;
 }
-
 .btn-success {
   --bs-btn-bg: #10B981;
   --bs-btn-border-color: #10B981;
@@ -80,28 +71,27 @@ body {
   --bs-btn-disabled-border-color: #10B981;
   --bs-btn-focus-shadow-rgb: 16, 185, 129;
 }
-
+/* Price text color - Emerald accent, used across product cards, cart, and checkout */
+.text-price {
+  color: #10B981 !important;
+}
 #app {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
 }
-
 main {
   flex: 1; /* Pushes the footer to the bottom of the page */
 }
-
 /* Page Transition Animation */
 .fade-enter-active,
 .fade-leave-active {
   transition: opacity 0.2s ease;
 }
-
 .fade-enter-from,
 .fade-leave-to {
   opacity: 0;
 }
-
 /* Customizing Bootstrap Scrollbar */
 ::-webkit-scrollbar {
   width: 8px;
