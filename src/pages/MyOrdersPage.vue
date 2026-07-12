@@ -164,12 +164,12 @@ h2 {
 }
 
 .nav-link:hover {
-  color: #0d6efd;
+  color: #2563EB;
 }
 
 .nav-link.active {
-  color: #0d6efd !important;
-  border-bottom: 3px solid #0d6efd !important;
+  color: #2563EB !important;
+  border-bottom: 3px solid #2563EB !important;
   background: transparent !important;
 }
 
@@ -184,7 +184,7 @@ h2 {
   padding: 4px 10px;
   border-radius: 4px;
   background: #eef2f7;
-  color: #0d6efd;
+  color: #2563EB;
   text-transform: uppercase;
 }
 
@@ -194,7 +194,7 @@ h2 {
 }
 
 .status-label.completed {
-  color: #198754;
+  color: #10B981;
   background: #f0fff4;
 }
 
@@ -243,7 +243,7 @@ h2 {
 }
 
 .btn-primary {
-  background-color: #0d6efd;
+  background-color: #2563EB;
   border: none;
   font-weight: 600;
 }

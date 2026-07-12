@@ -96,9 +96,9 @@ const fetchAllOrders = async () => {
   try {
     const res = await api.get('/orders/all-orders');
     
-    // Safety check: handle { orders: [] } or a direct array []
+   
     if (res.data && res.data.orders) {
-      orders.value = res.data.orders; // Matches backend { orders }
+      orders.value = res.data.orders; 
     } else if (Array.isArray(res.data)) {
       orders.value = res.data;
     } else {
@@ -106,25 +106,25 @@ const fetchAllOrders = async () => {
     }
   } catch (err) {
     console.error("Admin Fetch Error:", err);
-    orders.value = []; // Prevents the 0 Total Orders layout from crashing
+    orders.value = []; 
   } finally {
     loading.value = false;
   }
 };
 
-// 2. Handle Status Update
+
 const updateStatus = async (orderId, newStatus) => {
   try {
     await api.patch(`/orders/${orderId}/update-status`, { status: newStatus });
     alert(`Order updated to: ${newStatus}`);
-    await fetchAllOrders(); // Refresh table data
+    await fetchAllOrders(); 
   } catch (err) {
     console.error("Update error:", err);
     alert("Error updating order status.");
   }
 };
 
-// 3. UI Helpers
+
 const getStatusClass = (status) => {
   const s = status?.toLowerCase() || 'pending';
   if (s === 'pending') return 'badge bg-warning text-dark';

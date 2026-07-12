@@ -89,14 +89,14 @@ const handleChangePassword = async () => {
 .avatar-circle {
   width: 72px;
   height: 72px;
-  background: linear-gradient(135deg, #0d6efd, #0a58ca);
+  background: linear-gradient(135deg, #2563EB, #1D4ED8);
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
 }
 .form-control:focus {
-  border-color: #0d6efd;
-  box-shadow: 0 0 0 0.2rem rgba(13,110,253,.15);
+  border-color: #2563EB;
+  box-shadow: 0 0 0 0.2rem rgba(37,99,235,.15);
 }
 </style>

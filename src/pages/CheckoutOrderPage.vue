@@ -77,7 +77,7 @@
 import { ref, computed, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import api from '../services/api';
-import { useUserStore } from '../stores/global'; // Import your store
+import { useUserStore } from '../stores/global'; 
 
 const router = useRouter();
 const userStore = useUserStore();
@@ -85,11 +85,11 @@ const cartItems = ref([]);
 const isProcessing = ref(false);
 
 const totalPrice = computed(() => {
-  // Always check if cartItems exists before reducing
+
   if (!cartItems.value || cartItems.value.length === 0) return 0;
   
   return cartItems.value.reduce((acc, item) => {
-    // Access the price through productId
+   
     const price = item.productId?.price || 0;
     return acc + (price * item.quantity);
   }, 0);
@@ -99,12 +99,12 @@ const fetchCart = async () => {
   try {
     const res = await api.get('/cart/get-cart', {
       headers: {
-        // FIX 2: You MUST include the token or the backend won't return your cart
+        
         Authorization: `Bearer ${localStorage.getItem('token')}`
       }
     });
     
-    // FIX 3: Target res.data.cart.cartItems to match your MEVN backend structure
+ 
     if (res.data && res.data.cart) {
       cartItems.value = res.data.cart.cartItems || [];
     } else {
@@ -116,7 +116,7 @@ const fetchCart = async () => {
     }
   } catch (err) {
     console.error("Error loading checkout", err);
-    cartItems.value = []; // Fallback to empty array on error
+    cartItems.value = []; 
   }
 };
 
@@ -128,7 +128,7 @@ const handlePlaceOrder = async () => {
 
   isProcessing.value = true;
   try {
-    // We use the 'token' key since that is what you saved during login
+   
     const token = localStorage.getItem('token'); 
 
   const res = await api.post('/orders/checkout', {}, {
@@ -156,7 +156,7 @@ onMounted(fetchCart);
   border-radius: 10px;
 }
 .form-control:focus {
-  border-color: #0d6efd;
+  border-color: #2563EB;
   box-shadow: none;
 }
 </style>
