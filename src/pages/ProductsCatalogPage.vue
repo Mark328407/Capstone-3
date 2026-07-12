@@ -55,6 +55,16 @@
       </aside>
 
       <main class="col-lg-9">
+        <div v-if="filters.search" class="alert alert-light border d-flex justify-content-between align-items-center mb-4">
+          <span>
+            <i class="bi bi-search me-2"></i>
+            Showing results for <strong>"{{ filters.search }}"</strong>
+          </span>
+          <button @click="clearSearch" class="btn btn-sm btn-outline-secondary">
+            <i class="bi bi-x-lg"></i> Clear
+          </button>
+        </div>
+
         <div v-if="isLoading" class="text-center py-5">
           <div class="spinner-border text-primary" role="status" style="width: 3rem; height: 3rem;">
             <span class="visually-hidden">Loading laptops...</span>
@@ -80,10 +90,13 @@
 </template>
 
 <script setup>
-import { ref, onMounted, computed, reactive } from 'vue';
+import { ref, onMounted, computed, reactive, watch } from 'vue';
+import { useRoute, useRouter } from 'vue-router';
 import ProductCard from '../components/ProductCard.vue';
 import { getActiveProducts } from '../services/api';
 
+const route = useRoute();
+const router = useRouter();
 const products = ref([]);
 const isLoading = ref(true);
 
@@ -92,8 +105,24 @@ const filters = reactive({
   brand: '',
   minPrice: null,
   maxPrice: null,
-  sort: ''
+  sort: '',
+  search: route.query.search || ''
 });
+
+// Keep the search filter in sync if the navbar search is used again
+// while already on this page (Vue Router won't remount the component
+// for a query-only change, so this needs its own watcher).
+watch(
+  () => route.query.search,
+  (newSearch) => {
+    filters.search = newSearch || '';
+  }
+);
+
+const clearSearch = () => {
+  filters.search = '';
+  router.replace({ path: '/', query: {} });
+};
 
 // Get unique brands for the dropdown automatically from your product list
 const uniqueBrands = computed(() => {
@@ -104,6 +133,15 @@ const uniqueBrands = computed(() => {
 // FILTERING LOGIC
 const filteredProducts = computed(() => {
   let list = [...products.value];
+
+  // Filter by Search (brand/model name or description)
+  if (filters.search && filters.search.trim()) {
+    const query = filters.search.trim().toLowerCase();
+    list = list.filter(p =>
+      p.name.toLowerCase().includes(query) ||
+      (p.description && p.description.toLowerCase().includes(query))
+    );
+  }
 
   // Filter by Brand
   if (filters.brand) {
@@ -140,6 +178,8 @@ const resetFilters = () => {
   filters.minPrice = null;
   filters.maxPrice = null;
   filters.sort = '';
+  filters.search = '';
+  router.replace({ path: '/', query: {} });
 };
 
 const fetchLaptops = async () => {
@@ -154,7 +194,7 @@ const fetchLaptops = async () => {
       // If image is missing or uses the broken placeholder, replace it
       image: product.image && !product.image.includes('placeholder.com') 
              ? product.image 
-             : `https://placehold.jp/24/2563EB/ffffff/300x200.png?text=${encodeURIComponent(product.name)}`
+             : `https://placehold.jp/24/0d6efd/ffffff/300x200.png?text=${encodeURIComponent(product.name)}`
     }));
   } catch (error) {
     console.error("Error loading products:", error);
