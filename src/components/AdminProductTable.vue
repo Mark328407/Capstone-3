@@ -56,6 +56,14 @@
               >
                 <i :class="['bi', laptop.isActive ? 'bi-archive' : 'bi-check-circle']"></i>
               </button>
+
+              <button 
+                @click="$emit('delete', laptop)" 
+                class="btn btn-sm btn-outline-danger rounded shadow-sm"
+                title="Delete Permanently"
+              >
+                <i class="bi bi-trash3"></i>
+              </button>
             </div>
           </td>
         </tr>
@@ -79,7 +87,7 @@ defineProps({
   }
 });
 
-defineEmits(['edit', 'toggle-status']);
+defineEmits(['edit', 'toggle-status', 'delete']);
 </script>
 
 <style scoped>

@@ -66,6 +66,7 @@
       :products="filteredProducts" 
       @toggle-status="handleToggleStatus" 
       @edit="handleEditClick" 
+      @delete="handleDeleteClick"
     />
 
     <AddProductModal @productAdded="onProductAdded" />
@@ -210,6 +211,23 @@ const handleEditClick = (product) => {
   editForm.image = product.image ?? '';
   editImagePreviewFailed.value = false;
   editModal.show = true;
+};
+
+
+const handleDeleteClick = async (product) => {
+  const confirmed = confirm(
+    `Permanently delete "${product.name}"? This cannot be undone. ` +
+    `If this product has past orders, consider using Archive instead.`
+  );
+  if (!confirmed) return;
+
+  try {
+    await api.delete(`/products/${product._id}/delete`);
+    showAlert(`"${product.name}" was permanently deleted.`, "success");
+    fetchInventory();
+  } catch (error) {
+    showAlert("Failed to delete product.", "danger");
+  }
 };
 
 
